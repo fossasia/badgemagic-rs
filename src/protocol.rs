@@ -1,6 +1,6 @@
 //! Protocol used to update the badge
 
-use std::{convert::Infallible, num::TryFromIntError};
+use std::num::TryFromIntError;
 
 #[cfg(feature = "embedded-graphics")]
 use embedded_graphics::{
@@ -396,23 +396,56 @@ impl PayloadBuffer {
 pub struct MessageBuffer<'a>(&'a mut [[u8; 11]]);
 
 impl MessageBuffer<'_> {
-    #[cfg(feature = "embedded-graphics")]
-    fn set(&mut self, point: Point, color: BinaryColor) -> Option<()> {
-        let byte = self
-            .0
-            .get_mut(usize::try_from(point.x / 8).ok()?)?
-            .get_mut(usize::try_from(point.y).ok()?)?;
-
-        let bit = 0x80 >> (point.x % 8);
-        match color {
-            BinaryColor::Off => {
+    /// Set the state of the pixel at point (`x`, `y`)
+    ///
+    /// Returns `None` if the pixel was out of bounds.
+    pub fn set(&mut self, (x, y): (usize, usize), state: State) -> Option<()> {
+        let byte = self.0.get_mut(x / 8)?.get_mut(y)?;
+        let bit = 0x80 >> (x % 8);
+        match state {
+            State::Off => {
                 *byte &= !bit;
             }
-            BinaryColor::On => {
+            State::On => {
                 *byte |= bit;
             }
         }
         Some(())
+    }
+
+    #[cfg(feature = "embedded-graphics")]
+    fn set_embedded_graphics(&mut self, point: Point, color: BinaryColor) -> Option<()> {
+        let x = point.x.try_into().ok()?;
+        let y = point.y.try_into().ok()?;
+        self.set((x, y), color.into())
+    }
+}
+
+/// State of a pixel
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum State {
+    #[default]
+    Off,
+    On,
+}
+
+impl From<bool> for State {
+    fn from(value: bool) -> Self {
+        if value {
+            Self::On
+        } else {
+            Self::Off
+        }
+    }
+}
+
+#[cfg(feature = "embedded-graphics")]
+impl From<BinaryColor> for State {
+    fn from(value: BinaryColor) -> Self {
+        match value {
+            BinaryColor::Off => Self::Off,
+            BinaryColor::On => Self::On,
+        }
     }
 }
 
@@ -430,7 +463,7 @@ impl Dimensions for MessageBuffer<'_> {
 impl DrawTarget for MessageBuffer<'_> {
     type Color = BinaryColor;
 
-    type Error = Infallible;
+    type Error = std::convert::Infallible;
 
     fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
     where
@@ -438,7 +471,7 @@ impl DrawTarget for MessageBuffer<'_> {
     {
         for Pixel(point, color) in pixels {
             #[allow(clippy::manual_assert)]
-            if self.set(point, color).is_none() {
+            if self.set_embedded_graphics(point, color).is_none() {
                 panic!(
                     "tried to draw pixel outside the display area (x: {}, y: {})",
                     point.x, point.y
