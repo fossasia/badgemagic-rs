@@ -1,0 +1,32 @@
+[[message]]
+blink = true
+border = true
+mode = "center"
+text = "Hello"
+
+[[message]]
+mode = "laser"
+text = "Laser"
+
+[[message]]
+mode = "drop"
+text = "Drop"
+
+[[message]]
+mode = "curtain"
+text = "Curtain"
+
+[[message]]
+mode = "left"
+text = "Move message left"
+
+[[message]]
+mode = "up"
+text = "Move up"
+
+[[message]]
+blink = true
+border = true
+speed = 6
+mode = "left"
+text = "Combine them all and add some speed... might be a bit overwhelming"

@@ -1,0 +1,48 @@
+[package]
+name = "badgemagic"
+version = "0.1.0"
+authors = ["Martin Michaelis <code@mgjm.de>"]
+edition = "2021"
+description = "Badge Magic with LEDs - Library and CLI"
+homepage = "https://badgemagic.fossasia.org"
+repository = "https://github.com/fossasia/badgemagic-rs"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[[bin]]
+name = "badgemagic"
+required-features = ["cli"]
+
+[[example]]
+name = "hello-world"
+required-features = ["embedded-graphics", "usb-hid"]
+
+[features]
+default = ["embedded-graphics", "usb-hid"]
+
+cli = [
+  "embedded-graphics",
+  "serde",
+  "usb-hid",
+  "dep:base64",
+  "dep:clap",
+  "dep:serde_json",
+  "dep:toml",
+]
+
+embedded-graphics = ["dep:embedded-graphics"]
+serde = ["dep:serde"]
+usb-hid = ["dep:hidapi"]
+
+[dependencies]
+anyhow = "1.0.86"
+base64 = { version = "0.22.1", optional = true }
+clap = { version = "4.5.4", features = ["derive"], optional = true }
+embedded-graphics = { version = "0.8.1", optional = true }
+hidapi = { version = "2.6.1", optional = true }
+serde = { version = "1.0.203", features = ["derive"], optional = true }
+serde_json = { version = "1.0.117", optional = true }
+time = "0.3.36"
+toml = { version = "0.8.13", optional = true }
+zerocopy = { version = "0.7.34", features = ["derive"] }
+

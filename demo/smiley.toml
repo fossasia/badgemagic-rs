@@ -1,0 +1,15 @@
+[[message]]
+mode = "center"
+bitstring = """
+___XXXXX___
+__X_____X__
+_X_______X_
+X__XX_XX__X
+X__XX_XX__X
+X_________X
+X_XX___XX_X
+X__XXXXX__X
+_X__XXX__X_
+__X_____X__
+___XXXXX___
+"""
