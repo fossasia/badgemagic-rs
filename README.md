@@ -46,7 +46,8 @@ cargo run --features cli -- --help
 
 ## Usage
 
-Execute the `badgemagic` tool and pass the file name of your configuration file. Depending on how you installed the tool:
+Execute the `badgemagic` tool and pass the file name of your configuration file alongside the mode of transport (USB or Bluetooth Low Energy).
+Depending on how you installed the tool:
 
 ```sh
 # Downloaded from release page
@@ -60,6 +61,8 @@ cargo run --features cli -- config.toml
 ```
 
 The above command will read your configuration from a file named `config.toml` in the current directory.
+The transport mode can be either `--transport usb` or `--transport ble` for transferring the message via Bluetooth Low Energy.
+Usage of BLE on macOS requires special permissions, which is explained in more detail [here](https://github.com/deviceplug/btleplug#macos).
 
 ## Configuration
 

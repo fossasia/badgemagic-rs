@@ -6,6 +6,9 @@ pub mod protocol;
 #[cfg(feature = "usb-hid")]
 pub mod usb_hid;
 
+#[cfg(feature = "ble")]
+pub mod ble;
+
 #[cfg(feature = "embedded-graphics")]
 pub mod util;
 

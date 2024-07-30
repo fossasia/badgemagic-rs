@@ -4,8 +4,9 @@ use std::{fs, path::PathBuf};
 
 use anyhow::{Context, Result};
 use badgemagic::{
+    ble::Device as BleDevice,
     protocol::{Mode, PayloadBuffer, Speed, Style},
-    usb_hid::Device,
+    usb_hid::Device as UsbDevice,
 };
 use base64::Engine;
 use clap::Parser;
@@ -38,8 +39,19 @@ struct Args {
     #[clap(long)]
     format: Option<String>,
 
+    /// Transport protocol to use
+    #[clap(long)]
+    transport: TransportProtocol,
+
     /// Path to TOML configuration file
     config: PathBuf,
+}
+
+#[derive(Clone, Deserialize, clap::ValueEnum)]
+#[serde(rename_all = "kebab-case")]
+enum TransportProtocol {
+    Usb,
+    Ble,
 }
 
 #[derive(Deserialize)]
@@ -78,7 +90,8 @@ enum Content {
     // PngFile { png_file: PathBuf },
 }
 
-fn main() -> Result<()> {
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> Result<()> {
     let args = Args::parse();
     let config = fs::read_to_string(&args.config)
         .with_context(|| format!("load config: {:?}", args.config))?;
@@ -177,7 +190,10 @@ fn main() -> Result<()> {
         }
     }
 
-    Device::single()?.write(payload)?;
+    match args.transport {
+        TransportProtocol::Usb => UsbDevice::single()?.write(payload),
+        TransportProtocol::Ble => BleDevice::single().await?.write(payload).await,
+    }?;
 
     Ok(())
 }
