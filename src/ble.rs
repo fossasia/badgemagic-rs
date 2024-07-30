@@ -36,8 +36,13 @@ impl Device {
     /// This function panics if it is unable to access the Bluetooth adapter.
     pub async fn enumerate_duration(scan_duration: Duration) -> Result<Vec<Self>> {
         // Run device scan
-        let manager = Manager::new().await.unwrap();
-        let adapter = manager.adapters().await.unwrap().pop().unwrap();
+        let manager = Manager::new().await?;
+        let adapter = manager.adapters().await?.pop();
+        if adapter.is_none() {
+            return Err(anyhow::anyhow!("No Bluetooth adapter found"));
+        }
+
+        let adapter = adapter.unwrap();
         adapter.start_scan(ScanFilter::default()).await?;
         task::sleep(scan_duration).await;
 
