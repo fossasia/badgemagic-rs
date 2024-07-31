@@ -122,20 +122,28 @@ impl Device {
     /// # Panics
     /// This functions panics if the BLE device does not have the expected badge characteristic.
     pub async fn write(&self, payload: PayloadBuffer) -> Result<()> {
-        // Connect and discover services
         self.peripheral
             .connect()
             .await
             .context("bluetooth device connect")?;
-        if let Err(error) = self.peripheral.discover_services().await {
+
+        let result = self.write_connected(payload).await;
+        if result.is_ok() {
             self.peripheral
                 .disconnect()
                 .await
                 .context("bluetooth device disconnect")?;
-            return Err(error.into());
         }
 
-        // Get characteristics
+        result
+    }
+
+    async fn write_connected(&self, payload: PayloadBuffer) -> Result<()> {
+        // Get characteristic
+        self.peripheral
+            .discover_services()
+            .await
+            .context("discovering services")?;
         let characteristics = self.peripheral.characteristics();
         let badge_char = characteristics.iter().find(|c| c.uuid == BADGE_CHAR_UUID);
 
@@ -160,24 +168,12 @@ impl Device {
         anyhow::ensure!(data.len() <= 8192, "payload too long (max 8192 bytes)");
 
         for chunk in data.chunks(BLE_CHAR_CHUNK_SIZE) {
-            let write_result = self
-                .peripheral
+            self.peripheral
                 .write(badge_char, chunk, WriteType::WithoutResponse)
-                .await;
-
-            if let Err(error) = write_result {
-                self.peripheral
-                    .disconnect()
-                    .await
-                    .context("bluetooth device disconnect")?;
-                return Err(anyhow::anyhow!("Error writing payload chunk: {:?}", error));
-            }
+                .await
+                .context("writing payload chunk")?;
         }
 
-        self.peripheral
-            .disconnect()
-            .await
-            .context("bluetooth device disconnect")?;
         Ok(())
     }
 }
