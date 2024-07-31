@@ -90,8 +90,7 @@ enum Content {
     // PngFile { png_file: PathBuf },
 }
 
-#[tokio::main(flavor = "current_thread")]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let args = Args::parse();
     let config = fs::read_to_string(&args.config)
         .with_context(|| format!("load config: {:?}", args.config))?;
@@ -192,7 +191,10 @@ async fn main() -> Result<()> {
 
     match args.transport {
         TransportProtocol::Usb => UsbDevice::single()?.write(payload),
-        TransportProtocol::Ble => BleDevice::single().await?.write(payload).await,
+        TransportProtocol::Ble => tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?
+            .block_on(async { BleDevice::single().await?.write(payload).await }),
     }?;
 
     Ok(())
