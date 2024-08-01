@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 use btleplug::{
-    api::{Central as _, Manager as _, Peripheral as _, ScanFilter, WriteType},
+    api::{bleuuid, Central as _, Manager as _, Peripheral as _, ScanFilter, WriteType},
     platform::{Manager, Peripheral},
 };
 use tokio::time;
@@ -13,9 +13,9 @@ use uuid::Uuid;
 use crate::protocol::PayloadBuffer;
 
 /// `0000fee0-0000-1000-8000-00805f9b34fb`
-const BADGE_SERVICE_UUID: Uuid = btleplug::api::bleuuid::uuid_from_u16(0xfee0);
+const BADGE_SERVICE_UUID: Uuid = bleuuid::uuid_from_u16(0xfee0);
 /// `0000fee1-0000-1000-8000-00805f9b34fb`
-const BADGE_CHAR_UUID: Uuid = btleplug::api::bleuuid::uuid_from_u16(0xfee1);
+const BADGE_CHAR_UUID: Uuid = bleuuid::uuid_from_u16(0xfee1);
 
 const BADGE_BLE_DEVICE_NAME: &str = "LSLED";
 const BLE_CHAR_CHUNK_SIZE: usize = 16;
@@ -75,26 +75,19 @@ impl Device {
         // and also the correct name.
         // The service uuid is also by devices that are not LED badges, so
         // the name check is also necessary.
-        let props = peripheral.properties().await;
-        if props.is_err() {
+        let props = peripheral.properties().await.ok()??;
+
+        let local_name = props.local_name.as_ref()?;
+        if local_name != BADGE_BLE_DEVICE_NAME {
             return None;
         }
 
-        if let Some(props) = props.unwrap() {
-            let local_name = props.local_name.as_ref()?;
-            if local_name != BADGE_BLE_DEVICE_NAME {
-                return None;
-            }
-
-            if props
-                .services
-                .iter()
-                .any(|uuid| *uuid == BADGE_SERVICE_UUID)
-            {
-                Some(Self { peripheral })
-            } else {
-                None
-            }
+        if props
+            .services
+            .iter()
+            .any(|uuid| *uuid == BADGE_SERVICE_UUID)
+        {
+            Some(Self { peripheral })
         } else {
             None
         }
@@ -128,14 +121,15 @@ impl Device {
             .context("bluetooth device connect")?;
 
         let result = self.write_connected(payload).await;
-        if result.is_ok() {
-            self.peripheral
-                .disconnect()
-                .await
-                .context("bluetooth device disconnect")?;
-        }
+        let disconnect_result = self.peripheral.disconnect().await;
 
-        result
+        if result.is_ok() {
+            // Write succesful, return disconnect result
+            Ok(disconnect_result?)
+        } else {
+            // Write failed, return write result and ignore disconnect result
+            result
+        }
     }
 
     async fn write_connected(&self, payload: PayloadBuffer) -> Result<()> {
@@ -145,12 +139,10 @@ impl Device {
             .await
             .context("discovering services")?;
         let characteristics = self.peripheral.characteristics();
-        let badge_char = characteristics.iter().find(|c| c.uuid == BADGE_CHAR_UUID);
-
-        if badge_char.is_none() {
-            return Err(anyhow::anyhow!("Badge characteristic not found"));
-        }
-        let badge_char = badge_char.unwrap();
+        let badge_char = characteristics
+            .iter()
+            .find(|c| c.uuid == BADGE_CHAR_UUID)
+            .context("badge characteristic not found")?;
 
         // Write payload
         let bytes = payload.into_padded_bytes();
@@ -158,10 +150,8 @@ impl Device {
 
         anyhow::ensure!(
             data.len() % BLE_CHAR_CHUNK_SIZE == 0,
-            format!(
-                "Payload size must be a multiple of {} bytes",
-                BLE_CHAR_CHUNK_SIZE
-            )
+            "Payload size must be a multiple of {} bytes",
+            BLE_CHAR_CHUNK_SIZE
         );
 
         // the device will brick itself if the payload is too long (more then 8192 bytes)
