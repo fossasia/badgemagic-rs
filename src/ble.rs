@@ -71,22 +71,15 @@ impl Device {
     }
 
     async fn from_peripheral(peripheral: Peripheral) -> Option<Self> {
-        // Check whether the BLE device has the service UUID we're looking for
-        // and also the correct name.
-        // The service uuid is also by devices that are not LED badges, so
-        // the name check is also necessary.
+        // The existance of the service with the correct UUID
+        // exists is already checked by the scan filter.
+        // But we also need to check the device name to make sure
+        // we're talking to a badge as some devices that are not led badges
+        // also use the same service UUID.
         let props = peripheral.properties().await.ok()??;
-
         let local_name = props.local_name.as_ref()?;
-        if local_name != BADGE_BLE_DEVICE_NAME {
-            return None;
-        }
 
-        if props
-            .services
-            .iter()
-            .any(|uuid| *uuid == BADGE_SERVICE_UUID)
-        {
+        if local_name == BADGE_BLE_DEVICE_NAME {
             Some(Self { peripheral })
         } else {
             None
