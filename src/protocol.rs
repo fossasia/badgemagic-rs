@@ -12,7 +12,7 @@ use embedded_graphics::{
     Drawable,
 };
 use time::OffsetDateTime;
-use zerocopy::{AsBytes, BigEndian, FromBytes, FromZeroes, U16};
+use zerocopy::{BigEndian, FromBytes, Immutable, IntoBytes, KnownLayout, U16};
 
 /// Message style configuration
 /// ```
@@ -197,7 +197,7 @@ const MSG_PADDING_ALIGN: usize = 64;
 
 const MAGIC: [u8; 6] = *b"wang\0\0";
 
-#[derive(FromZeroes, FromBytes, AsBytes)]
+#[derive(FromBytes, IntoBytes, Immutable, KnownLayout)]
 #[repr(C)]
 struct Header {
     magic: [u8; 6],
@@ -210,7 +210,7 @@ struct Header {
     _padding_2: [u8; 20],
 }
 
-#[derive(FromZeroes, FromBytes, AsBytes)]
+#[derive(FromBytes, IntoBytes, Immutable, KnownLayout)]
 #[repr(C)]
 struct Timestamp {
     year: u8,
@@ -297,7 +297,7 @@ impl PayloadBuffer {
     }
 
     fn header_mut(&mut self) -> &mut Header {
-        Header::mut_from_prefix(&mut self.data).unwrap()
+        Header::mut_from_prefix(&mut self.data).unwrap().0
     }
 
     /// Return the current number of messages
@@ -359,7 +359,7 @@ impl PayloadBuffer {
 
         let start = self.data.len();
         self.data.resize(start + count * 11, 0);
-        MessageBuffer(FromBytes::mut_slice_from(&mut self.data[start..]).unwrap())
+        MessageBuffer(FromBytes::mut_from_bytes(&mut self.data[start..]).unwrap())
     }
 
     /// Get the current payload as bytes (without padding)

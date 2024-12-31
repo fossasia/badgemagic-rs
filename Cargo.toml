@@ -49,4 +49,4 @@ serde = { version = "1.0.204", features = ["derive"], optional = true }
 serde_json = { version = "1.0.121", optional = true }
 time = "0.3.36"
 toml = { version = "0.8.19", optional = true }
-zerocopy = { version = "0.7.35", features = ["derive"] }
+zerocopy = { version = "0.8.14", features = ["derive"] }
