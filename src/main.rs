@@ -9,7 +9,7 @@ use badgemagic::{
     usb_hid::Device as UsbDevice,
 };
 use base64::Engine;
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use embedded_graphics::{
     geometry::Point,
     image::{Image, ImageRawLE},
@@ -43,11 +43,16 @@ struct Args {
     #[clap(long)]
     transport: TransportProtocol,
 
+    /// List all devices visible to a transport and exit
+    #[clap(long)]
+    list_devices: bool,
+
     /// Path to TOML configuration file
-    config: PathBuf,
+    #[clap(required_unless_present = "list_devices")]
+    config: Option<PathBuf>,
 }
 
-#[derive(Clone, Deserialize, clap::ValueEnum)]
+#[derive(Clone, Deserialize, ValueEnum)]
 #[serde(rename_all = "kebab-case")]
 enum TransportProtocol {
     Usb,
@@ -91,16 +96,48 @@ enum Content {
 }
 
 fn main() -> Result<()> {
-    let args = Args::parse();
-    let config = fs::read_to_string(&args.config)
-        .with_context(|| format!("load config: {:?}", args.config))?;
+    let mut args = Args::parse();
 
+    if args.list_devices {
+        return list_devices(&args.transport);
+    }
+
+    let payload = gnerate_payload(&mut args)?;
+
+    write_payload(&args.transport, payload)
+}
+
+fn list_devices(transport: &TransportProtocol) -> Result<()> {
+    let devices = match transport {
+        TransportProtocol::Usb => UsbDevice::list_all(),
+        TransportProtocol::Ble => tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?
+            .block_on(async { BleDevice::list_all().await }),
+    }?;
+
+    eprintln!(
+        "found {} {} devices",
+        devices.len(),
+        transport.to_possible_value().unwrap().get_name(),
+    );
+    for device in devices {
+        println!("- {device}");
+    }
+
+    Ok(())
+}
+
+fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
+    let config_path = args.config.take().unwrap_or_default();
+    let config = fs::read_to_string(&config_path)
+        .with_context(|| format!("load config: {config_path:?}"))?;
     let config: Config = {
         let extension = args
             .format
             .as_deref()
             .map(AsRef::as_ref)
-            .or(args.config.extension())
+            .or(config_path.extension())
             .context("missing file extension for config file")?;
         match extension.to_str().unwrap_or_default() {
             "json" => serde_json::from_str(&config).context("parse config")?,
@@ -189,13 +226,18 @@ fn main() -> Result<()> {
         }
     }
 
-    match args.transport {
+    Ok(payload)
+}
+
+fn write_payload(
+    transport: &TransportProtocol,
+    payload: PayloadBuffer,
+) -> Result<(), anyhow::Error> {
+    match transport {
         TransportProtocol::Usb => UsbDevice::single()?.write(payload),
         TransportProtocol::Ble => tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()?
             .block_on(async { BleDevice::single().await?.write(payload).await }),
-    }?;
-
-    Ok(())
+    }
 }

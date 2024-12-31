@@ -29,6 +29,25 @@ pub struct Device {
 }
 
 impl Device {
+    /// Return a list of all usb devies as a string representation
+    pub fn list_all() -> Result<Vec<String>> {
+        let api = HidApi::new().context("create hid api")?;
+        let devices = api.device_list();
+
+        Ok(devices
+            .map(|info| {
+                format!(
+                    "{:?}: vendor_id={:#06x} product_id={:#06x} manufacturer={:?} product={:?}",
+                    info.path(),
+                    info.vendor_id(),
+                    info.product_id(),
+                    info.manufacturer_string(),
+                    info.product_string(),
+                )
+            })
+            .collect())
+    }
+
     /// Return all supported devices
     pub fn enumerate() -> Result<Vec<Self>> {
         let api = HidApi::new().context("create hid api")?;

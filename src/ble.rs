@@ -26,6 +26,50 @@ pub struct Device {
 }
 
 impl Device {
+    /// Return a list of all BLE devies as a string representation.
+    pub async fn list_all() -> Result<Vec<String>> {
+        // Run device scan
+        let manager = Manager::new().await.context("create BLE manager")?;
+        let adapters = manager
+            .adapters()
+            .await
+            .context("enumerate bluetooth adapters")?;
+        let adapter = adapters.first().context("no bluetooth adapter found")?;
+
+        adapter
+            .start_scan(ScanFilter {
+                // don't filter by service
+                services: Vec::new(),
+            })
+            .await
+            .context("bluetooth scan start")?;
+        time::sleep(Duration::from_secs(2)).await;
+
+        let mut devices = Vec::new();
+        for peripheral in adapter
+            .peripherals()
+            .await
+            .context("enumerating bluetooth devices")?
+        {
+            let device = async {
+                let props = peripheral
+                    .properties()
+                    .await?
+                    .context("missing device info")?;
+
+                Ok(format!(
+                    "{}: name={:?} services={:?}",
+                    props.address, props.local_name, props.services
+                ))
+            };
+            devices.push(device.await.unwrap_or_else(|err: anyhow::Error| {
+                format!("{} failed to collect info: {err:?}", peripheral.address())
+            }));
+        }
+
+        Ok(devices)
+    }
+
     /// Return all supported devices that are found in two seconds.
     ///
     /// Returns all badges that are in BLE range and are in Bluetooth transfer mode.
