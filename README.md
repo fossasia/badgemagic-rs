@@ -28,7 +28,7 @@ chmod +x badgemagic
 ./badgemagic --help
 ```
 
-> Note: The windows and macOS build is not actively tested. Please try it out and report back whether it worked or any problems that might occour.
+> Note: The windows and macOS build is not actively tested. Please try it out and report back whether it worked or any problems that might occur.
 
 If your system is not listed above (Linux / Windows on ARM, musl, etc.) or you want to do it anyway, you can install this tool from source:
 
