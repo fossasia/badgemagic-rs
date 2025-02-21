@@ -368,7 +368,7 @@ impl PayloadBuffer {
         &self.data
     }
 
-    /// Convert the payload buffe into bytes (with padding)
+    /// Convert the payload buffer into bytes (with padding)
     #[allow(clippy::missing_panics_doc)] // should never panic
     #[must_use]
     pub fn into_padded_bytes(self) -> impl AsRef<[u8]> {
