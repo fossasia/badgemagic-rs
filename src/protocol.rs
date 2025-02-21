@@ -54,7 +54,7 @@ impl Style {
         self
     }
 
-    /// Show a dotted border arround the display.
+    /// Show a dotted border around the display.
     /// ```
     /// use badgemagic::protocol::Style;
     /// # (
@@ -241,7 +241,7 @@ impl Timestamp {
 
 /// Buffer to create a payload
 ///
-/// A payload consits of up to 8 messages
+/// A payload consists of up to 8 messages
 /// ```
 /// # #[cfg(feature = "embedded-graphics")]
 /// # fn main() {
@@ -368,7 +368,7 @@ impl PayloadBuffer {
         &self.data
     }
 
-    /// Convert the payload buffe into bytes (with padding)
+    /// Convert the payload buffer into bytes (with padding)
     #[allow(clippy::missing_panics_doc)] // should never panic
     #[must_use]
     pub fn into_padded_bytes(self) -> impl AsRef<[u8]> {
