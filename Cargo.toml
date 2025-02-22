@@ -35,6 +35,7 @@ embedded-graphics = ["dep:embedded-graphics"]
 serde = ["dep:serde"]
 usb-hid = ["dep:hidapi"]
 ble = ["dep:btleplug", "dep:uuid", "dep:tokio"]
+u8g2-fonts = ["dep:u8g2-fonts"]
 
 [dependencies]
 anyhow = "1.0.95"
@@ -50,4 +51,4 @@ serde_json = { version = "1.0.134", optional = true }
 time = "0.3.37"
 toml = { version = "0.8.19", optional = true }
 zerocopy = { version = "0.8.14", features = ["derive"] }
-u8g2-fonts = {  version = "0.5.2", features = ["embedded_graphics_textstyle"] }
+u8g2-fonts = {  version = "0.5.2", features = ["embedded_graphics_textstyle"], optional = true}
