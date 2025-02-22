@@ -1,7 +1,7 @@
 [package]
 name = "badgemagic"
 version = "0.1.0"
-authors = ["Martin Michaelis <code@mgjm.de>"]
+authors = ["Martin Michaelis <code@mgjm.de>", "Valentin Weber <weva+code@kabelsalat.ch>"]
 edition = "2021"
 description = "Badge Magic with LEDs - Library and CLI"
 homepage = "https://badgemagic.fossasia.org"
@@ -50,3 +50,4 @@ serde_json = { version = "1.0.134", optional = true }
 time = "0.3.37"
 toml = { version = "0.8.19", optional = true }
 zerocopy = { version = "0.8.14", features = ["derive"] }
+u8g2-fonts = {  version = "0.5.2", features = ["embedded_graphics_textstyle"] }
