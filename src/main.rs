@@ -18,6 +18,10 @@ use embedded_graphics::{
     Drawable, Pixel,
 };
 use serde::Deserialize;
+
+#[cfg(not(any(feature = "u8g2-fonts")))]
+use embedded_graphics::mono_font::{iso_8859_1::FONT_6X9, MonoTextStyle};
+#[cfg(feature = "u8g2-fonts")]
 use u8g2_fonts::{fonts::u8g2_font_lucasfont_alternate_tf, U8g2TextStyle};
 
 #[derive(Parser)]
@@ -106,7 +110,7 @@ fn main() -> Result<()> {
         return list_devices(&args.transport);
     }
 
-    let payload = gnerate_payload(&mut args)?;
+    let payload = generate_payload(&mut args)?;
 
     write_payload(&args.transport, payload)
 }
@@ -132,7 +136,7 @@ fn list_devices(transport: &TransportProtocol) -> Result<()> {
     Ok(())
 }
 
-fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
+fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
     let config_path = args.config.take().unwrap_or_default();
     let config = fs::read_to_string(&config_path)
         .with_context(|| format!("load config: {config_path:?}"))?;
@@ -161,8 +165,18 @@ fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
             style = style.border();
         }
         style = style.speed(message.speed).mode(message.mode);
+
         match message.content {
             Content::Text { text } => {
+
+                #[cfg(not(any(feature = "u8g2-fonts")))]
+                let text = Text::new(
+                    &text,
+                    Point::new(0, 8),
+                    U8g2TextStyle::new(u8g2_font_lucasfont_alternate_tf, BinaryColor::On),
+                );
+                
+                #[cfg(feature = "u8g2-fonts")]
                 let text = Text::new(
                     &text,
                     Point::new(0, 8),
