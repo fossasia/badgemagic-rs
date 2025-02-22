@@ -5,7 +5,7 @@ use std::{fs, path::PathBuf};
 use anyhow::{Context, Result};
 use badgemagic::{
     ble::Device as BleDevice,
-    protocol::{Mode, PayloadBuffer, Speed, Style},
+    protocol::{Brightness, Mode, PayloadBuffer, Speed, Style},
     usb_hid::Device as UsbDevice,
 };
 use base64::Engine;
@@ -42,6 +42,10 @@ struct Args {
     /// Transport protocol to use
     #[clap(long)]
     transport: TransportProtocol,
+
+    /// Brightness of the panel
+    #[clap(long)]
+    brightness: Option<Brightness>,
 
     /// List all devices visible to a transport and exit
     #[clap(long)]
@@ -146,7 +150,7 @@ fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
         }
     };
 
-    let mut payload = PayloadBuffer::new();
+    let mut payload = PayloadBuffer::new(args.brightness.unwrap_or_default());
 
     for message in config.messages {
         let mut style = Style::default();
@@ -164,6 +168,7 @@ fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                     Point::new(0, 7),
                     MonoTextStyle::new(&FONT_6X9, BinaryColor::On),
                 );
+
                 payload.add_message_drawable(style, &text);
             }
             Content::Bitstring { bitstring } => {

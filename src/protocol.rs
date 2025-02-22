@@ -1,7 +1,5 @@
 //! Protocol used to update the badge
 
-use std::num::TryFromIntError;
-
 #[cfg(feature = "embedded-graphics")]
 use embedded_graphics::{
     draw_target::DrawTarget,
@@ -11,6 +9,7 @@ use embedded_graphics::{
     primitives::Rectangle,
     Drawable,
 };
+use std::num::TryFromIntError;
 use time::OffsetDateTime;
 use zerocopy::{BigEndian, FromBytes, Immutable, IntoBytes, KnownLayout, U16};
 
@@ -54,7 +53,7 @@ impl Style {
         self
     }
 
-    /// Show a dotted border arround the display.
+    /// Show a dotted border around the display.
     /// ```
     /// use badgemagic::protocol::Style;
     /// # (
@@ -161,7 +160,7 @@ impl TryFrom<u8> for Speed {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum Mode {
-    /// Scroll thorugh the message from left to right
+    /// Scroll through the message from left to right
     #[default]
     Left,
 
@@ -193,14 +192,39 @@ pub enum Mode {
     Laser,
 }
 
+/// Display Brightness
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "cli", derive(clap::ValueEnum))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "PascalCase"))]
+pub enum Brightness {
+    #[default]
+    Full,
+    ThreeQuarters,
+    Half,
+    OneQuarter,
+}
+
+impl From<Brightness> for u8 {
+    fn from(value: Brightness) -> Self {
+        match value {
+            Brightness::Full => 0x00,
+            Brightness::ThreeQuarters => 0x10,
+            Brightness::Half => 0x20,
+            Brightness::OneQuarter => 0x30,
+        }
+    }
+}
+
 const MSG_PADDING_ALIGN: usize = 64;
 
-const MAGIC: [u8; 6] = *b"wang\0\0";
+const MAGIC: [u8; 5] = *b"wang\0";
 
 #[derive(FromBytes, IntoBytes, Immutable, KnownLayout)]
 #[repr(C)]
 struct Header {
-    magic: [u8; 6],
+    magic: [u8; 5],
+    brightness: u8,
     blink: u8,
     border: u8,
     speed_and_mode: [u8; 8],
@@ -241,7 +265,7 @@ impl Timestamp {
 
 /// Buffer to create a payload
 ///
-/// A payload consits of up to 8 messages
+/// A payload consists of up to 8 messages
 /// ```
 /// # #[cfg(feature = "embedded-graphics")]
 /// # fn main() {
@@ -252,7 +276,7 @@ impl Timestamp {
 ///     primitives::{PrimitiveStyle, Rectangle, Styled},
 /// };
 ///
-/// let mut buffer = PayloadBuffer::new();
+/// let mut buffer = PayloadBuffer::default();
 /// buffer.add_message_drawable(
 ///     Style::default(),
 ///     &Styled::new(
@@ -271,18 +295,19 @@ pub struct PayloadBuffer {
 
 impl Default for PayloadBuffer {
     fn default() -> Self {
-        Self::new()
+        Self::new(Brightness::Full)
     }
 }
 
 impl PayloadBuffer {
     /// Create a new empty buffer
     #[must_use]
-    pub fn new() -> Self {
+    pub fn new(brightness: Brightness) -> Self {
         Self {
             num_messages: 0,
             data: Header {
                 magic: MAGIC,
+                brightness: brightness.into(),
                 blink: 0,
                 border: 0,
                 speed_and_mode: [0; 8],
@@ -368,7 +393,7 @@ impl PayloadBuffer {
         &self.data
     }
 
-    /// Convert the payload buffe into bytes (with padding)
+    /// Convert the payload buffer into bytes (with padding)
     #[allow(clippy::missing_panics_doc)] // should never panic
     #[must_use]
     pub fn into_padded_bytes(self) -> impl AsRef<[u8]> {

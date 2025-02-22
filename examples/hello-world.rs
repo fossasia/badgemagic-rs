@@ -5,13 +5,13 @@ use badgemagic::{
     embedded_graphics::{
         geometry::Point, mono_font::MonoTextStyle, pixelcolor::BinaryColor, text::Text,
     },
-    protocol::{Mode, PayloadBuffer, Style},
+    protocol::{Brightness, Mode, PayloadBuffer, Style},
     usb_hid::Device,
     util::DrawableLayoutExt,
 };
 
 fn main() -> Result<()> {
-    let mut payload = PayloadBuffer::new();
+    let mut payload = PayloadBuffer::new(Brightness::default());
 
     payload.add_message_drawable(
         Style::default().mode(Mode::Center),
