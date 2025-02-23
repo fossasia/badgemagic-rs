@@ -509,9 +509,8 @@ impl DrawTarget for MessageBuffer<'_> {
 
 #[cfg(test)]
 mod test {
+    use super::{Brightness, Speed};
     use std::ops::Range;
-
-    use super::Speed;
 
     #[test]
     fn speed_to_u8_and_back() {
@@ -522,6 +521,20 @@ mod test {
             } else {
                 assert!(!VALID_SPEED_VALUES.contains(&i));
             }
+        }
+    }
+
+    #[test]
+    fn brightness_to_u8() {
+        const VALID_BRIGHTNESS_VALUES: [(Brightness, u8); 4] = [
+            (Brightness::Full, 0x00),
+            (Brightness::ThreeQuarters, 0x10),
+            (Brightness::Half, 0x20),
+            (Brightness::OneQuarter, 0x30),
+        ];
+
+        for i in VALID_BRIGHTNESS_VALUES {
+            assert_eq!(u8::from(Brightness::from(i.0)), i.1);
         }
     }
 }
