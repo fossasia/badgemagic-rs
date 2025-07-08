@@ -171,8 +171,8 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                 #[cfg(not(any(feature = "u8g2-fonts")))]
                 let text = Text::new(
                     &text,
-                    Point::new(0, 8),
-                    U8g2TextStyle::new(u8g2_font_lucasfont_alternate_tf, BinaryColor::On),
+                    Point::new(0, 7),
+                    MonoTextStyle::new(&FONT_6X9, BinaryColor::On),
                 );
 
                 #[cfg(feature = "u8g2-fonts")]
