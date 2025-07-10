@@ -191,7 +191,7 @@ impl Device {
             BLE_CHAR_CHUNK_SIZE
         );
 
-        // the device will brick itself if the payload is too long (more then 8192 bytes)
+        // the device will brick itself if the payload is too long (more than 8192 bytes)
         anyhow::ensure!(data.len() <= 8192, "payload too long (max 8192 bytes)");
 
         for chunk in data.chunks(BLE_CHAR_CHUNK_SIZE) {

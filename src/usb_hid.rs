@@ -92,7 +92,7 @@ impl Device {
 fn write_raw(device: &HidDevice, data: &[u8]) -> Result<()> {
     anyhow::ensure!(data.len() % 64 == 0, "payload not padded to 64 bytes");
 
-    // the device will brick itself if the payload is too long (more then 8192 bytes)
+    // the device will brick itself if the payload is too long (more than 8192 bytes)
     anyhow::ensure!(data.len() <= 8192, "payload too long (max 8192 bytes)");
 
     // just to be sure

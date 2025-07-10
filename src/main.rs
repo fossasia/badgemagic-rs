@@ -1,7 +1,5 @@
 #![warn(clippy::all, clippy::pedantic)]
 
-use std::{fs, path::PathBuf};
-
 use anyhow::{Context, Result};
 use badgemagic::{
     ble::Device as BleDevice,
@@ -10,6 +8,8 @@ use badgemagic::{
 };
 use base64::Engine;
 use clap::{Parser, ValueEnum};
+#[cfg(not(any(feature = "u8g2-fonts")))]
+use embedded_graphics::mono_font::{iso_8859_1::FONT_6X9, MonoTextStyle};
 use embedded_graphics::{
     geometry::Point,
     image::{Image, ImageRawLE},
@@ -18,9 +18,7 @@ use embedded_graphics::{
     Drawable, Pixel,
 };
 use serde::Deserialize;
-
-#[cfg(not(any(feature = "u8g2-fonts")))]
-use embedded_graphics::mono_font::{iso_8859_1::FONT_6X9, MonoTextStyle};
+use std::{fs, path::PathBuf};
 #[cfg(feature = "u8g2-fonts")]
 use u8g2_fonts::{fonts::u8g2_font_lucasfont_alternate_tf, U8g2TextStyle};
 
@@ -99,8 +97,6 @@ enum Content {
     Bitstring { bitstring: String },
     BitmapBase64 { width: u32, bitmap_base64: String },
     BitmapFile { width: u32, bitmap_file: PathBuf },
-    // TODO: implement png
-    // PngFile { png_file: PathBuf },
 }
 
 fn main() -> Result<()> {
@@ -208,12 +204,8 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                                 // off
                             }
                             'X' => {
-                                Pixel(
-                                    Point::new(x.try_into().unwrap(), y.try_into().unwrap()),
-                                    BinaryColor::On,
-                                )
-                                .draw(&mut buffer)
-                                .unwrap();
+                                Pixel(Point::new(x.try_into()?, y.try_into()?), BinaryColor::On)
+                                    .draw(&mut buffer)?;
                             }
                             _ => anyhow::bail!("invalid bit value for bit ({x}, {y}): {c:?}"),
                         }
