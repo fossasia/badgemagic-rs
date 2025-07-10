@@ -1,7 +1,7 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::unnecessary_debug_formatting)]
 
-use std::{fs, path::PathBuf};
+use std::{fs, fs::File, io::BufReader, path::PathBuf};
 
 use anyhow::{Context, Result};
 use badgemagic::{
@@ -19,8 +19,9 @@ use embedded_graphics::{
     Drawable, Pixel,
 };
 use serde::Deserialize;
-use u8g2_fonts::{fonts::u8g2_font_lucasfont_alternate_tf, U8g2TextStyle};
-use image::{imageops::FilterType, ImageReader};
+use image::{
+    codecs::gif::GifDecoder, imageops::FilterType, AnimationDecoder, ImageReader, Pixel as iPixel,
+};
 
 #[derive(Parser)]
 /// Upload a configuration with up to 8 messages to an LED badge
@@ -101,6 +102,7 @@ enum Content {
     BitmapBase64 { width: u32, bitmap_base64: String },
     BitmapFile { width: u32, bitmap_file: PathBuf },
     ImageFile { img_file: PathBuf },
+    GifFile { gif_file: PathBuf },
 }
 
 fn main() -> Result<()> {
@@ -110,7 +112,7 @@ fn main() -> Result<()> {
         return list_devices(&args.transport);
     }
 
-    let payload = gnerate_payload(&mut args)?;
+    let payload = generate_payload(&mut args)?;
 
     write_payload(&args.transport, Option::from(&args.device_name), payload)
 }
@@ -136,7 +138,7 @@ fn list_devices(transport: &TransportProtocol) -> Result<()> {
     Ok(())
 }
 
-fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
+fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
     let config_path = args.config.take().unwrap_or_default();
     let config = fs::read_to_string(&config_path)
         .with_context(|| format!("load config: {config_path:?}"))?;
@@ -245,6 +247,36 @@ fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                         if img.get_pixel(x, y).0 > [31] {
                             Pixel(Point::new(x.try_into()?, y.try_into()?), BinaryColor::On)
                                 .draw(&mut buffer)?;
+                        }
+                    }
+                }
+            }
+            Content::GifFile { gif_file } => {
+                let file_in = BufReader::new(File::open(gif_file)?);
+                let frames = GifDecoder::new(file_in)?
+                    .into_frames()
+                    .collect_frames()
+                    .expect("error decoding gif");
+
+                let frame_count = frames.len();
+                let (width, height) = frames.first().unwrap().buffer().dimensions();
+                if height != 11 || width != 44 {
+                    anyhow::bail!("Expected 44x11 pixel gif file");
+                }
+
+                let mut buffer = payload.add_message(style, (48 * frame_count + 7) / 8);
+
+                for (i, frame) in frames.iter().enumerate() {
+                    let buf = frame.buffer();
+                    for y in 0..11 {
+                        for x in 0..44 {
+                            if buf.get_pixel(x, y).to_luma().0 > [31] {
+                                Pixel(
+                                    Point::new((x as usize + i * 48).try_into()?, y.try_into()?),
+                                    BinaryColor::On,
+                                )
+                                .draw(&mut buffer)?;
+                            }
                         }
                     }
                 }
