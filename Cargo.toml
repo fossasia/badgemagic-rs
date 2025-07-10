@@ -51,3 +51,4 @@ time = "0.3.41"
 toml = { version = "0.9.2", optional = true }
 zerocopy = { version = "0.8.26", features = ["derive"] }
 u8g2-fonts = {  version = "0.7.1", features = ["embedded_graphics_textstyle"] }
+image = "0.25.6"
