@@ -20,6 +20,7 @@ use embedded_graphics::{
 };
 use serde::Deserialize;
 use u8g2_fonts::{fonts::u8g2_font_lucasfont_alternate_tf, U8g2TextStyle};
+use image::{imageops::FilterType, ImageReader};
 
 #[derive(Parser)]
 /// Upload a configuration with up to 8 messages to an LED badge
@@ -99,8 +100,7 @@ enum Content {
     Bitstring { bitstring: String },
     BitmapBase64 { width: u32, bitmap_base64: String },
     BitmapFile { width: u32, bitmap_file: PathBuf },
-    // TODO: implement png
-    // PngFile { png_file: PathBuf },
+    ImageFile { img_file: PathBuf },
 }
 
 fn main() -> Result<()> {
@@ -231,6 +231,23 @@ fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                 let image_raw = ImageRawLE::<BinaryColor>::new(&data, width);
                 let image = Image::new(&image_raw, Point::zero());
                 payload.add_message_drawable(style, &image);
+            }
+            Content::ImageFile { img_file } => {
+                let img_reader = ImageReader::open(img_file)?;
+                let img = img_reader
+                    .decode()?
+                    .resize(u32::MAX, 11, FilterType::Nearest)
+                    .into_luma8();
+                let (width, height) = img.dimensions();
+                let mut buffer = payload.add_message(style, (width as usize + 7) / 8);
+                for y in 0..height {
+                    for x in 0..width {
+                        if img.get_pixel(x, y).0 > [31] {
+                            Pixel(Point::new(x.try_into()?, y.try_into()?), BinaryColor::On)
+                                .draw(&mut buffer)?;
+                        }
+                    }
+                }
             }
         }
     }
