@@ -10,10 +10,7 @@ mod cli {
     pub fn generate_version_info() {
         let pkg_version = env::var("CARGO_PKG_VERSION").expect("missing package version");
         let git_version = git_version();
-        let git_prefix = git_version
-            .is_some()
-            .then_some("commit-")
-            .unwrap_or_default();
+        let git_prefix = if git_version.is_some() { "commit-" } else { "" };
         let git_version = git_version.as_deref().unwrap_or("unknown");
         let version = format!("{pkg_version}-git.{git_prefix}{git_version}");
 

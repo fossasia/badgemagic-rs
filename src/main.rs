@@ -1,4 +1,5 @@
 #![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::unnecessary_debug_formatting)]
 
 use std::{fs, path::PathBuf};
 
@@ -181,7 +182,7 @@ fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                         lines.iter().map(|l| l.len()).collect::<Vec<_>>()
                     );
                 }
-                let mut buffer = payload.add_message(style, (width + 7) / 8);
+                let mut buffer = payload.add_message(style, width.div_ceil(8));
 
                 for (y, line) in lines.iter().enumerate() {
                     for (x, c) in line.chars().enumerate() {

@@ -327,7 +327,7 @@ impl PayloadBuffer {
 
         let bounds = content.bounding_box();
         let width = add(bounds.top_left.x, bounds.size.width);
-        let mut message = self.add_message(style, (width + 7) / 8);
+        let mut message = self.add_message(style, width.div_ceil(8));
         content.draw(&mut message).unwrap()
     }
 
