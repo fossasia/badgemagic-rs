@@ -64,7 +64,8 @@ enum TransportProtocol {
 #[serde(deny_unknown_fields)]
 struct Config {
     #[serde(default)]
-    brightness: Option<Brightness>,
+    brightness: Brightness,
+
     #[serde(rename = "message")]
     messages: Vec<Message>,
 }
@@ -150,7 +151,7 @@ fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
     };
 
     let mut payload = PayloadBuffer::new();
-    payload.set_brightness(config.brightness.unwrap_or_default());
+    payload.set_brightness(config.brightness);
 
     for message in config.messages {
         let mut style = Style::default();
