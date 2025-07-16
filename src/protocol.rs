@@ -285,7 +285,7 @@ impl Timestamp {
 ///     primitives::{PrimitiveStyle, Rectangle, Styled},
 /// };
 ///
-/// let mut buffer = PayloadBuffer;
+/// let mut buffer = PayloadBuffer::new();
 /// buffer.add_message_drawable(
 ///     Style::default(),
 ///     &Styled::new(
