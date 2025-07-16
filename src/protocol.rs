@@ -540,16 +540,13 @@ mod test {
 
     #[test]
     fn brightness_to_u8_and_back() {
-        const VALID_BRIGHTNESS_VALUES: [(Brightness, u8); 4] = [
-            (Brightness::Full, 0x00),
-            (Brightness::ThreeQuarters, 0x10),
-            (Brightness::Half, 0x20),
-            (Brightness::OneQuarter, 0x30),
-        ];
-
-        for (value, raw) in VALID_BRIGHTNESS_VALUES {
-            assert_eq!(u8::from(value), raw);
-            assert_eq!(Brightness::try_from(raw).unwrap(), value);
+        const VALID_BRIGHTNESS_VALUES: [u8; 4] = [0x00, 0x10, 0x20, 0x30];
+        for i in u8::MIN..u8::MAX {
+            if let Ok(brightness) = Brightness::try_from(i) {
+                assert_eq!(u8::from(brightness), i);
+            } else {
+                assert!(!VALID_BRIGHTNESS_VALUES.contains(&i));
+            }
         }
     }
 
