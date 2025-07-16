@@ -6,7 +6,7 @@ use std::{fs, path::PathBuf};
 use anyhow::{Context, Result};
 use badgemagic::{
     ble::Device as BleDevice,
-    protocol::{Mode, PayloadBuffer, Speed, Style},
+    protocol::{Brightness, Mode, PayloadBuffer, Speed, Style},
     usb_hid::Device as UsbDevice,
 };
 use base64::Engine;
@@ -63,6 +63,8 @@ enum TransportProtocol {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Config {
+    #[serde(default)]
+    brightness: Option<Brightness>,
     #[serde(rename = "message")]
     messages: Vec<Message>,
 }
@@ -148,6 +150,7 @@ fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
     };
 
     let mut payload = PayloadBuffer::new();
+    payload.set_brightness(config.brightness.unwrap_or_default());
 
     for message in config.messages {
         let mut style = Style::default();
