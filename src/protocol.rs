@@ -539,7 +539,7 @@ mod test {
     }
 
     #[test]
-    fn brightness_to_u8() {
+    fn brightness_to_u8_and_back() {
         const VALID_BRIGHTNESS_VALUES: [(Brightness, u8); 4] = [
             (Brightness::Full, 0x00),
             (Brightness::ThreeQuarters, 0x10),
@@ -549,6 +549,8 @@ mod test {
 
         for (value, raw) in VALID_BRIGHTNESS_VALUES {
             assert_eq!(u8::from(value), raw);
+            assert_eq!(Brightness::try_from(raw).unwrap(), value);
         }
     }
+
 }
