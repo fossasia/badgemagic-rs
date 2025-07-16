@@ -1,5 +1,7 @@
 //! Protocol used to update the badge
 
+use std::num::TryFromIntError;
+
 #[cfg(feature = "embedded-graphics")]
 use embedded_graphics::{
     draw_target::DrawTarget,
@@ -9,7 +11,6 @@ use embedded_graphics::{
     primitives::Rectangle,
     Drawable,
 };
-use std::num::TryFromIntError;
 use time::OffsetDateTime;
 use zerocopy::{BigEndian, FromBytes, Immutable, IntoBytes, KnownLayout, U16};
 
@@ -521,8 +522,9 @@ impl DrawTarget for MessageBuffer<'_> {
 
 #[cfg(test)]
 mod test {
-    use super::{Brightness, Speed};
     use std::ops::Range;
+
+    use super::{Brightness, Speed};
 
     #[test]
     fn speed_to_u8_and_back() {
