@@ -1,7 +1,5 @@
 //! Protocol used to update the badge
 
-use std::num::TryFromIntError;
-
 #[cfg(feature = "embedded-graphics")]
 use embedded_graphics::{
     draw_target::DrawTarget,
@@ -11,6 +9,7 @@ use embedded_graphics::{
     primitives::Rectangle,
     Drawable,
 };
+use std::{convert::Infallible, num::TryFromIntError};
 use time::OffsetDateTime;
 use zerocopy::{BigEndian, FromBytes, Immutable, IntoBytes, KnownLayout, U16};
 
@@ -196,7 +195,7 @@ pub enum Mode {
 /// Display Brightness
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(try_from = "f32", into = "u8"))]
 pub enum Brightness {
     #[default]
     Full = 0x00,
@@ -213,7 +212,6 @@ impl From<Brightness> for u8 {
 
 impl TryFrom<u8> for Brightness {
     type Error = TryFromIntError;
-
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         Ok(match value {
             0x00 => Self::Full,
@@ -222,6 +220,32 @@ impl TryFrom<u8> for Brightness {
             0x30 => Self::OneQuarter,
             _ => return Err(u8::try_from(-1).unwrap_err()),
         })
+    }
+}
+
+impl From<Brightness> for f32 {
+    fn from(value: Brightness) -> Self {
+        match value {
+            Brightness::Full => 1.0,
+            Brightness::ThreeQuarters => 0.75,
+            Brightness::Half => 0.5,
+            Brightness::OneQuarter => 0.5,
+        }
+    }
+}
+
+impl TryFrom<f32> for Brightness {
+    type Error = Infallible;
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        if value < 0.375 {
+            Ok(Self::OneQuarter)
+        } else if value < 0.625 {
+            Ok(Self::Half)
+        } else if value < 0.875 {
+            Ok(Self::ThreeQuarters)
+        } else {
+            Ok(Self::Full)
+        }
     }
 }
 
@@ -539,7 +563,7 @@ mod test {
     }
 
     #[test]
-    fn brightness_to_u8_and_back() {
+    fn u8_to_brightness_and_back() {
         const VALID_BRIGHTNESS_VALUES: [u8; 4] = [0x00, 0x10, 0x20, 0x30];
         for i in u8::MIN..u8::MAX {
             if let Ok(brightness) = Brightness::try_from(i) {
@@ -547,6 +571,16 @@ mod test {
             } else {
                 assert!(!VALID_BRIGHTNESS_VALUES.contains(&i));
             }
+        }
+    }
+
+    #[test]
+    fn f32_to_brightness_and_back() {
+        const VALID_BRIGHTNESS_VALUES: [f32; 4] = [0.25, 0.5, 0.75, 1.0];
+        for i in i8::MIN..i8::MAX {
+            let i = i as f32 / 4f32;
+            let Ok(brightness) = Brightness::try_from(i);
+            assert!(VALID_BRIGHTNESS_VALUES.contains(&(f32::from(brightness))));
         }
     }
 }
