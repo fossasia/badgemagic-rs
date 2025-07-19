@@ -16,16 +16,13 @@ use embedded_graphics::{
     image::{Image, ImageRawLE},
     pixelcolor::BinaryColor,
     text::Text,
-    Drawable,
-    Pixel,
+    Drawable, Pixel,
+};
+use image::{
+    codecs::gif::GifDecoder, imageops::FilterType, AnimationDecoder, ImageReader,
+    Pixel as ImagePixel,
 };
 use serde::Deserialize;
-use image::{
-    AnimationDecoder,
-    codecs::gif::GifDecoder,
-    imageops::FilterType,
-    ImageReader, Pixel as ImagePixel,
-};
 
 #[derive(Parser)]
 /// Upload a configuration with up to 8 messages to an LED badge
