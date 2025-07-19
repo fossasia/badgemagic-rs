@@ -1059,6 +1059,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "u8g2-fonts"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e4bdc43a7fb3720ece9ba4405b57db4fc479ad6af6b57090f6ff4c040f5d54b"
+dependencies = [
+ "embedded-graphics",
+ "embedded-graphics-core",
+]
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
