@@ -16,8 +16,7 @@ use embedded_graphics::{
     image::{Image, ImageRawLE},
     pixelcolor::BinaryColor,
     text::Text,
-    Drawable,
-    Pixel,
+    Drawable, Pixel,
 };
 use serde::Deserialize;
 use u8g2_fonts::{fonts::u8g2_font_lucasfont_alternate_tf, U8g2TextStyle};
