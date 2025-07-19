@@ -1,5 +1,6 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::unnecessary_debug_formatting)]
+#![allow(clippy::too_many_lines)]
 
 use std::{fs, io::BufReader, path::PathBuf};
 
@@ -242,7 +243,7 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                     .resize(u32::MAX, 11, FilterType::Nearest)
                     .into_luma8();
                 let (width, height) = img.dimensions();
-                let mut buffer = payload.add_message(style, (width as usize + 7) / 8);
+                let mut buffer = payload.add_message(style, (width as usize).div_ceil(8));
                 for y in 0..height {
                     for x in 0..width {
                         if img.get_pixel(x, y).0 > [31] {
@@ -265,7 +266,7 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                     anyhow::bail!("Expected 44x11 pixel gif file");
                 }
 
-                let mut buffer = payload.add_message(style, (48 * frame_count + 7) / 8);
+                let mut buffer = payload.add_message(style, (48 * frame_count).div_ceil(8));
 
                 for (i, frame) in frames.iter().enumerate() {
                     let buf = frame.buffer();
