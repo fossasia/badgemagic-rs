@@ -229,7 +229,7 @@ impl From<Brightness> for f32 {
             Brightness::Full => 1.0,
             Brightness::ThreeQuarters => 0.75,
             Brightness::Half => 0.5,
-            Brightness::OneQuarter => 0.5,
+            Brightness::OneQuarter => 0.25,
         }
     }
 }
@@ -578,7 +578,7 @@ mod test {
     fn f32_to_brightness_and_back() {
         const VALID_BRIGHTNESS_VALUES: [f32; 4] = [0.25, 0.5, 0.75, 1.0];
         for i in i8::MIN..i8::MAX {
-            let i = i as f32 / 4f32;
+            let i = f32::from(i) / 4f32;
             let Ok(brightness) = Brightness::try_from(i);
             assert!(VALID_BRIGHTNESS_VALUES.contains(&(f32::from(brightness))));
         }
