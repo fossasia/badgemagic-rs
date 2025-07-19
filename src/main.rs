@@ -14,12 +14,13 @@ use clap::{Parser, ValueEnum};
 use embedded_graphics::{
     geometry::Point,
     image::{Image, ImageRawLE},
-    mono_font::{iso_8859_1::FONT_6X9, MonoTextStyle},
     pixelcolor::BinaryColor,
     text::Text,
-    Drawable, Pixel,
+    Drawable,
+    Pixel,
 };
 use serde::Deserialize;
+use u8g2_fonts::{fonts::u8g2_font_lucasfont_alternate_tf, U8g2TextStyle};
 
 #[derive(Parser)]
 /// Upload a configuration with up to 8 messages to an LED badge
@@ -166,8 +167,8 @@ fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
             Content::Text { text } => {
                 let text = Text::new(
                     &text,
-                    Point::new(0, 7),
-                    MonoTextStyle::new(&FONT_6X9, BinaryColor::On),
+                    Point::new(0, 8),
+                    U8g2TextStyle::new(u8g2_font_lucasfont_alternate_tf, BinaryColor::On),
                 );
                 payload.add_message_drawable(style, &text);
             }
