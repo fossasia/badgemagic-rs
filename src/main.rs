@@ -141,6 +141,9 @@ fn list_devices(transport: &TransportProtocol) -> Result<()> {
 }
 
 fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
+    const DISPLAY_HEIGHT: u32 = 11;
+    const DISPLAY_WIDTH: u32 = 44;
+
     let config_path = args.config.take().unwrap_or_default();
     let config = fs::read_to_string(&config_path)
         .with_context(|| format!("load config: {config_path:?}"))?;
@@ -183,8 +186,9 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                 let lines: Vec<_> = bitstring.trim().lines().collect();
 
                 anyhow::ensure!(
-                    lines.len() == 11,
-                    "expected 11 lines in bitstring, found {} lines",
+                    lines.len() == DISPLAY_HEIGHT as usize,
+                    "expected {} lines in bitstring, found {} lines",
+                    DISPLAY_HEIGHT,
                     lines.len()
                 );
                 let width = lines[0].len();
@@ -240,10 +244,10 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                 let img_reader = ImageReader::open(img_file)?;
                 let img = img_reader
                     .decode()?
-                    .resize(u32::MAX, 11, FilterType::Nearest)
+                    .resize(u32::MAX, DISPLAY_HEIGHT, FilterType::Nearest)
                     .into_luma8();
                 let (width, height) = img.dimensions();
-                let mut buffer = payload.add_message(style, (width as usize).div_ceil(8));
+                let mut buffer = payload.add_message(style, width.div_ceil(8) as usize);
                 for y in 0..height {
                     for x in 0..width {
                         if img.get_pixel(x, y).0 > [31] {
@@ -262,19 +266,30 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
 
                 let frame_count = frames.len();
                 let (width, height) = frames.first().unwrap().buffer().dimensions();
-                if height != 11 || width != 44 {
-                    anyhow::bail!("Expected 44x11 pixel gif file");
+                if height != DISPLAY_HEIGHT || width != DISPLAY_WIDTH {
+                    anyhow::bail!(
+                        "Expected {}x{} pixel gif file",
+                        DISPLAY_WIDTH,
+                        DISPLAY_WIDTH
+                    );
                 }
 
-                let mut buffer = payload.add_message(style, (48 * frame_count).div_ceil(8));
+                let mut buffer = payload.add_message(
+                    style,
+                    ((DISPLAY_WIDTH as usize + 4) * frame_count).div_ceil(8),
+                );
 
                 for (i, frame) in frames.iter().enumerate() {
                     let buf = frame.buffer();
-                    for y in 0..11 {
-                        for x in 0..44 {
+                    for y in 0..DISPLAY_HEIGHT {
+                        for x in 0..DISPLAY_WIDTH {
                             if buf.get_pixel(x, y).to_luma().0 > [31] {
                                 Pixel(
-                                    Point::new((x as usize + i * 48).try_into()?, y.try_into()?),
+                                    Point::new(
+                                        (x as usize + i * (DISPLAY_WIDTH as usize + 4))
+                                            .try_into()?,
+                                        y.try_into()?,
+                                    ),
                                     BinaryColor::On,
                                 )
                                 .draw(&mut buffer)?;
