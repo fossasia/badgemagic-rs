@@ -73,8 +73,8 @@ impl Device {
     /// Return all supported devices that are found in two seconds.
     ///
     /// Returns all badges that are in BLE range and are in Bluetooth transfer mode.
-    pub async fn enumerate() -> Result<Vec<Self>> {
-        Self::enumerate_duration(Duration::from_secs(2)).await
+    pub async fn enumerate(device_name: &String) -> Result<Vec<Self>> {
+        Self::enumerate_duration(Duration::from_secs(2), device_name).await
     }
 
     /// Return all supported devices that are found in the given duration.
@@ -82,7 +82,10 @@ impl Device {
     /// Returns all badges that are in BLE range and are in Bluetooth transfer mode.
     /// # Panics
     /// This function panics if it is unable to access the Bluetooth adapter.
-    pub async fn enumerate_duration(scan_duration: Duration) -> Result<Vec<Self>> {
+    pub async fn enumerate_duration(
+        scan_duration: Duration,
+        device_name: &String,
+    ) -> Result<Vec<Self>> {
         // Run device scan
         let manager = Manager::new().await.context("create BLE manager")?;
         let adapters = manager
@@ -106,7 +109,7 @@ impl Device {
             .await
             .context("enumerating bluetooth devices")?
         {
-            if let Some(badge) = Self::from_peripheral(p).await {
+            if let Some(badge) = Self::from_peripheral(p, device_name).await {
                 led_badges.push(badge);
             }
         }
@@ -114,7 +117,7 @@ impl Device {
         Ok(led_badges)
     }
 
-    async fn from_peripheral(peripheral: Peripheral) -> Option<Self> {
+    async fn from_peripheral(peripheral: Peripheral, device_name: &String) -> Option<Self> {
         // The existance of the service with the correct UUID
         // exists is already checked by the scan filter.
         // But we also need to check the device name to make sure
@@ -123,7 +126,7 @@ impl Device {
         let props = peripheral.properties().await.ok()??;
         let local_name = props.local_name.as_ref()?;
 
-        if local_name == BADGE_BLE_DEVICE_NAME {
+        if local_name == device_name {
             Some(Self { peripheral })
         } else {
             None
@@ -134,8 +137,9 @@ impl Device {
     ///
     /// This function returns an error if no device could be found
     /// or if multiple devices would match.
-    pub async fn single() -> Result<Self> {
-        let mut devices = Self::enumerate()
+    pub async fn single(device_name: Option<String>) -> Result<Self> {
+        let device_name = &device_name.unwrap_or(BADGE_BLE_DEVICE_NAME.to_string());
+        let mut devices = Self::enumerate(device_name)
             .await
             .context("enumerating badges")?
             .into_iter();
