@@ -112,7 +112,7 @@ fn main() -> Result<()> {
 
     let payload = gnerate_payload(&mut args)?;
 
-    write_payload(&args.transport, args.device_name, payload)
+    write_payload(&args.transport, &args.device_name, payload)
 }
 
 fn list_devices(transport: &TransportProtocol) -> Result<()> {
@@ -240,7 +240,7 @@ fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
 
 fn write_payload(
     transport: &TransportProtocol,
-    device_name: Option<String>,
+    device_name: &Option<String>,
     payload: PayloadBuffer,
 ) -> Result<(), anyhow::Error> {
     match transport {
