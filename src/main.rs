@@ -112,7 +112,7 @@ fn main() -> Result<()> {
 
     let payload = gnerate_payload(&mut args)?;
 
-    write_payload(&args.transport, &args.device_name, payload)
+    write_payload(&args.transport, Option::from(&args.device_name), payload)
 }
 
 fn list_devices(transport: &TransportProtocol) -> Result<()> {
@@ -240,7 +240,7 @@ fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
 
 fn write_payload(
     transport: &TransportProtocol,
-    device_name: &Option<String>,
+    device_name: Option<&String>,
     payload: PayloadBuffer,
 ) -> Result<(), anyhow::Error> {
     match transport {
@@ -249,7 +249,7 @@ fn write_payload(
             .enable_all()
             .build()?
             .block_on(async {
-                BleDevice::single(device_name.as_deref())
+                BleDevice::single(device_name.map(|x| x.as_str()))
                     .await?
                     .write(payload)
                     .await
