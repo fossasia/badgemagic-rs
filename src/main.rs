@@ -248,6 +248,11 @@ fn write_payload(
         TransportProtocol::Ble => tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()?
-            .block_on(async { BleDevice::single(device_name).await?.write(payload).await }),
+            .block_on(async {
+                BleDevice::single(device_name.as_deref())
+                    .await?
+                    .write(payload)
+                    .await
+            }),
     }
 }

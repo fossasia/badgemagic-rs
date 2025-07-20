@@ -73,7 +73,7 @@ impl Device {
     /// Return all supported devices that are found in two seconds.
     ///
     /// Returns all badges that are in BLE range and are in Bluetooth transfer mode.
-    pub async fn enumerate(device_name: &String) -> Result<Vec<Self>> {
+    pub async fn enumerate(device_name: &str) -> Result<Vec<Self>> {
         Self::enumerate_duration(Duration::from_secs(2), device_name).await
     }
 
@@ -84,7 +84,7 @@ impl Device {
     /// This function panics if it is unable to access the Bluetooth adapter.
     pub async fn enumerate_duration(
         scan_duration: Duration,
-        device_name: &String,
+        device_name: &str,
     ) -> Result<Vec<Self>> {
         // Run device scan
         let manager = Manager::new().await.context("create BLE manager")?;
@@ -117,7 +117,7 @@ impl Device {
         Ok(led_badges)
     }
 
-    async fn from_peripheral(peripheral: Peripheral, device_name: &String) -> Option<Self> {
+    async fn from_peripheral(peripheral: Peripheral, device_name: &str) -> Option<Self> {
         // The existance of the service with the correct UUID
         // exists is already checked by the scan filter.
         // But we also need to check the device name to make sure
@@ -137,8 +137,8 @@ impl Device {
     ///
     /// This function returns an error if no device could be found
     /// or if multiple devices would match.
-    pub async fn single(device_name: Option<String>) -> Result<Self> {
-        let device_name = &device_name.unwrap_or(BADGE_BLE_DEVICE_NAME.to_string());
+    pub async fn single(device_name: Option<&str>) -> Result<Self> {
+        let device_name = device_name.unwrap_or(BADGE_BLE_DEVICE_NAME);
         let mut devices = Self::enumerate(device_name)
             .await
             .context("enumerating badges")?
