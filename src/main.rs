@@ -103,7 +103,7 @@ fn main() -> Result<()> {
         return list_devices(&args.transport);
     }
 
-    let payload = gnerate_payload(&mut args)?;
+    let payload = generate_payload(&mut args)?;
 
     write_payload(&args.transport, payload)
 }
@@ -129,7 +129,7 @@ fn list_devices(transport: &TransportProtocol) -> Result<()> {
     Ok(())
 }
 
-fn gnerate_payload(args: &mut Args) -> Result<PayloadBuffer> {
+fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
     let config_path = args.config.take().unwrap_or_default();
     let config = fs::read_to_string(&config_path)
         .with_context(|| format!("load config: {config_path:?}"))?;
