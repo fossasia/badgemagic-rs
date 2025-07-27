@@ -98,13 +98,36 @@ fn write_raw(device: &HidDevice, data: &[u8]) -> Result<()> {
     // just to be sure
     assert!(data.len() <= 8192);
 
-    let n = device.write(data).context("write payload")?;
+    let mut written: usize = 0;
+
+    #[cfg(windows)]
+    {
+        written = 0;
+
+        while written < data.len() {
+            let new_data: &[u8] = &prepend_byte_and_offset(data, written);
+            let n = device.write(new_data).context("write payload")?;
+            written = written + n - 1;
+        }
+    }
+
+    #[cfg(not(windows))]
+    {
+        written = device.write(data).context("write payload")?;
+    }
 
     anyhow::ensure!(
-        n == data.len(),
-        "incomplete write: {n} of {} bytes",
+        written == data.len(),
+        "incomplete write: {written} of {} bytes",
         data.len()
     );
 
     Ok(())
+}
+
+fn prepend_byte_and_offset(data: &[u8], offset: usize) -> [u8; 65] {
+    let mut result: [u8; 65] = [0u8; 65];
+    result[1] = 0x0;
+    result[1..].copy_from_slice(&data[offset..offset + 64]);
+    result
 }
