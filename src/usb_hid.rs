@@ -128,6 +128,9 @@ fn write_raw(device: &HidDevice, data: &[u8]) -> Result<()> {
 fn prepend_byte_and_offset(data: &[u8], offset: usize) -> [u8; 65] {
     let mut result: [u8; 65] = [0u8; 65];
     result[1] = 0x0;
+    if offset > data.len() {
+        return result;
+    }
     if data.len() - offset < 64 {
         result[1..].copy_from_slice(&data[offset..]);
     } else {
