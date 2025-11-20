@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup rust
         run: |
           rustup toolchain install nightly --profile minimal --component rustfmt --no-self-update
@@ -46,7 +46,7 @@ jobs:
             run2: -D warnings
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup rust
         run: |
           rustup toolchain install ${{ matrix.rust }} --profile minimal --no-self-update
@@ -81,7 +81,7 @@ jobs:
     # env:
     #   RUSTFLAGS: -C target-feature=+crt-static
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup rust
         run: |
           rustup toolchain install stable --target ${{ matrix.target.target }} --profile minimal --no-self-update
