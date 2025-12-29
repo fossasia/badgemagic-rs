@@ -66,7 +66,7 @@ jobs:
             runs-on: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             pre-build: |
-              sudo apt-get install -y libudev-dev libdbus-1-dev
+              sudo apt-get update && sudo apt-get install -y libudev-dev libdbus-1-dev
           - name: Windows (x86_64)
             runs-on: windows-latest
             target: x86_64-pc-windows-msvc
