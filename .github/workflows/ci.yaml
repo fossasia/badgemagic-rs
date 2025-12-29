@@ -97,7 +97,7 @@ jobs:
           mv target/${{ matrix.target.target }}/release/badgemagic${{ matrix.target.ext }} badgemagic.${{ matrix.target.target }}${{ matrix.target.ext }}
       - name: Run for ${{ matrix.target.name }}
         run: ./badgemagic.${{ matrix.target.target }}${{ matrix.target.ext }} --help
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: badgemagic.${{ matrix.target.target }}${{ matrix.target.ext }}
           path: badgemagic.${{ matrix.target.target }}${{ matrix.target.ext }}
