@@ -51,7 +51,7 @@ jobs:
         run: |
           rustup toolchain install ${{ matrix.rust }} --profile minimal --no-self-update
       - name: Install build dependencies
-        run: sudo apt-get install -y libudev-dev libdbus-1-dev
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev libdbus-1-dev
       - name: ${{ matrix.cmd.name }}
         run: ${{ matrix.cmd.run }} ${{ matrix.features }} -- ${{ matrix.cmd.run2 }}
 
