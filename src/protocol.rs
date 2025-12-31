@@ -9,7 +9,7 @@ use embedded_graphics::{
     primitives::Rectangle,
     Drawable,
 };
-use std::{convert::Infallible, num::TryFromIntError};
+use std::num::TryFromIntError;
 use time::OffsetDateTime;
 use zerocopy::{BigEndian, FromBytes, Immutable, IntoBytes, KnownLayout, U16};
 
@@ -234,17 +234,16 @@ impl From<Brightness> for f32 {
     }
 }
 
-impl TryFrom<f32> for Brightness {
-    type Error = Infallible;
-    fn try_from(value: f32) -> Result<Self, Self::Error> {
+impl From<f32> for Brightness {
+    fn from(value: f32) -> Self {
         if value < 0.375 {
-            Ok(Self::OneQuarter)
+            Self::OneQuarter
         } else if value < 0.625 {
-            Ok(Self::Half)
+            Self::Half
         } else if value < 0.875 {
-            Ok(Self::ThreeQuarters)
+            Self::ThreeQuarters
         } else {
-            Ok(Self::Full)
+            Self::Full
         }
     }
 }
@@ -400,7 +399,7 @@ impl PayloadBuffer {
     ///
     /// ## Panics
     /// Panics if the supported number of messages is reached.
-    pub fn add_message(&mut self, style: Style, count: usize) -> MessageBuffer {
+    pub fn add_message(&mut self, style: Style, count: usize) -> MessageBuffer<'_> {
         let index = self.num_messages as usize;
         assert!(
             index < 8,
@@ -579,7 +578,7 @@ mod test {
         const VALID_BRIGHTNESS_VALUES: [f32; 4] = [0.25, 0.5, 0.75, 1.0];
         for i in i8::MIN..i8::MAX {
             let i = f32::from(i) / 4f32;
-            let Ok(brightness) = Brightness::try_from(i);
+            let brightness = Brightness::from(i);
             assert!(VALID_BRIGHTNESS_VALUES.contains(&(f32::from(brightness))));
         }
     }
