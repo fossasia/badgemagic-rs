@@ -23,6 +23,7 @@ use image::{
     codecs::gif::GifDecoder, imageops::FilterType, AnimationDecoder, ImageReader,
     Pixel as ImagePixel,
 };
+use u8g2_fonts::{fonts::u8g2_font_lucasfont_alternate_tf, U8g2TextStyle};
 use serde::Deserialize;
 
 #[derive(Parser)]
