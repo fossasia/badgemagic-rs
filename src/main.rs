@@ -23,8 +23,8 @@ use image::{
     codecs::gif::GifDecoder, imageops::FilterType, AnimationDecoder, ImageReader,
     Pixel as ImagePixel,
 };
-use u8g2_fonts::{fonts::u8g2_font_lucasfont_alternate_tf, U8g2TextStyle};
 use serde::Deserialize;
+use u8g2_fonts::{fonts::u8g2_font_lucasfont_alternate_tf, U8g2TextStyle};
 
 #[derive(Parser)]
 /// Upload a configuration with up to 8 messages to an LED badge
