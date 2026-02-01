@@ -52,3 +52,9 @@ toml = { version = "0.9.11", optional = true }
 zerocopy = { version = "0.8.33", features = ["derive"] }
 u8g2-fonts = {  version = "0.7.1", features = ["embedded_graphics_textstyle"] }
 image = "0.25.6"
+
+# Optimize release builds for smaller binary size
+# See: https://github.com/fossasia/badgemagic-rs/issues/115
+[profile.release]
+codegen-units = 1
+lto = true
