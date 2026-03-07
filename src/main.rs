@@ -269,9 +269,7 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                 let (width, height) = frames.first().unwrap().buffer().dimensions();
                 if height != DISPLAY_HEIGHT || width != DISPLAY_WIDTH {
                     anyhow::bail!(
-                        "Expected {}x{} pixel gif file",
-                        DISPLAY_WIDTH,
-                        DISPLAY_WIDTH
+                        "Expected {DISPLAY_WIDTH}x{DISPLAY_WIDTH} pixel gif file"
                     );
                 }
 
