@@ -52,3 +52,7 @@ toml = { version = "0.9.11", optional = true }
 zerocopy = { version = "0.8.40", features = ["derive"] }
 u8g2-fonts = {  version = "0.7.1", features = ["embedded_graphics_textstyle"] }
 image = "0.25.6"
+
+[profile.release]
+codegen-units = 1
+lto = true
