@@ -39,7 +39,7 @@ ble = ["dep:btleplug", "dep:uuid", "dep:tokio"]
 [dependencies]
 anyhow = "1.0.102"
 base64 = { version = "0.22.1", optional = true }
-clap = { version = "4.5.60", features = ["derive"], optional = true }
+clap = { version = "4.5.61", features = ["derive"], optional = true }
 embedded-graphics = { version = "0.8.2", optional = true }
 hidapi = { version = "2.6.5", optional = true }
 btleplug = { version = "0.12.0", optional = true }
