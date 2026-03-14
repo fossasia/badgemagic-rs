@@ -101,17 +101,19 @@ fn write_raw(device: &HidDevice, data: &[u8]) -> Result<()> {
     // just to be sure
     assert!(data.len() <= 8192);
 
-    let mut written: usize;
+    let written: usize;
 
     #[cfg(windows)]
     {
-        written = 0;
+        let mut total_written = 0;
 
-        while written < data.len() {
-            let new_data: &[u8] = &prepend_byte_and_offset(data, written);
+        while total_written < data.len() {
+            let new_data: &[u8] = &prepend_byte_and_offset(data, total_written);
             let n = device.write(new_data).context("write payload")?;
-            written = written + n - 1;
+            total_written = total_written + n - 1;
         }
+
+        written = total_written;
     }
 
     #[cfg(not(windows))]
