@@ -50,7 +50,7 @@ serde_json = { version = "1.0.149", optional = true }
 time = "0.3.47"
 toml = { version = "1.1.2", optional = true }
 zerocopy = { version = "0.8.48", features = ["derive"] }
-u8g2-fonts = {  version = "0.7.1", features = ["embedded_graphics_textstyle"] }
+u8g2-fonts = {  version = "0.8.0", features = ["embedded_graphics_textstyle"] }
 image = "0.25.10"
 
 [profile.release]
