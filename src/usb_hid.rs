@@ -90,7 +90,10 @@ impl Device {
 }
 
 fn write_raw(device: &HidDevice, data: &[u8]) -> Result<()> {
-    anyhow::ensure!(data.len() % 64 == 0, "payload not padded to 64 bytes");
+    anyhow::ensure!(
+        data.len().is_multiple_of(64),
+        "payload not padded to 64 bytes"
+    );
 
     // the device will brick itself if the payload is too long (more then 8192 bytes)
     anyhow::ensure!(data.len() <= 8192, "payload too long (max 8192 bytes)");
@@ -98,17 +101,19 @@ fn write_raw(device: &HidDevice, data: &[u8]) -> Result<()> {
     // just to be sure
     assert!(data.len() <= 8192);
 
-    let mut written: usize = 0;
+    let written: usize;
 
     #[cfg(windows)]
     {
-        written = 0;
+        let mut total_written = 0;
 
-        while written < data.len() {
-            let new_data: &[u8] = &prepend_byte_and_offset(data, written);
+        while total_written < data.len() {
+            let new_data: &[u8] = &prepend_byte_and_offset(data, total_written);
             let n = device.write(new_data).context("write payload")?;
-            written = written + n - 1;
+            total_written = total_written + n - 1;
         }
+
+        written = total_written;
     }
 
     #[cfg(not(windows))]
@@ -125,6 +130,7 @@ fn write_raw(device: &HidDevice, data: &[u8]) -> Result<()> {
     Ok(())
 }
 
+#[cfg(windows)]
 fn prepend_byte_and_offset(data: &[u8], offset: usize) -> [u8; 65] {
     let mut result: [u8; 65] = [0u8; 65];
     result[1] = 0x0;

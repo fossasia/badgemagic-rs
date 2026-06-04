@@ -191,8 +191,7 @@ impl Device {
 
         anyhow::ensure!(
             data.len() % BLE_CHAR_CHUNK_SIZE == 0,
-            "Payload size must be a multiple of {} bytes",
-            BLE_CHAR_CHUNK_SIZE
+            "Payload size must be a multiple of {BLE_CHAR_CHUNK_SIZE} bytes"
         );
 
         // the device will brick itself if the payload is too long (more then 8192 bytes)
