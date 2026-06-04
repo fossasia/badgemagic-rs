@@ -180,7 +180,6 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                     &text,
                     Point::new(0, 8),
                     U8g2TextStyle::new(u8g2_font_lucasfont_alternate_tf, BinaryColor::On),
-                    // MonoTextStyle::new(&FONT_5X8, BinaryColor::On),
                 );
                 payload.add_message_drawable(style, &text);
             }

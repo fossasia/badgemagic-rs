@@ -1,5 +1,9 @@
 //! Protocol used to update the badge
 
+use core::fmt;
+use std::array::TryFromSliceError;
+use std::error::Error;
+use std::fmt::{Display, Formatter};
 #[cfg(feature = "embedded-graphics")]
 use embedded_graphics::{
     draw_target::DrawTarget,
@@ -155,6 +159,16 @@ impl TryFrom<u8> for Speed {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ModeParseError;
+
+impl Display for ModeParseError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_str("failed to parse Mode from string")
+    }
+}
+impl Error for ModeParseError {}
+
 /// Message display mode
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -249,7 +263,7 @@ impl From<f32> for Brightness {
 }
 
 impl TryFrom<&str> for Mode {
-    type Error = TryFromIntError;
+    type Error = ModeParseError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         Ok(match value {
@@ -262,7 +276,7 @@ impl TryFrom<&str> for Mode {
             "drop" => Self::Drop,
             "curtain" => Self::Curtain,
             "laser" => Self::Laser,
-            _ => return Err(u8::try_from(-1).unwrap_err()),
+            _ => return Err(ModeParseError),
         })
     }
 }
