@@ -1,6 +1,5 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::missing_errors_doc)]
-extern crate core;
 
 pub mod protocol;
 

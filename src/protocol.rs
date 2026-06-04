@@ -1,7 +1,6 @@
 //! Protocol used to update the badge
 
-use core::fmt;
-use std::array::TryFromSliceError;
+use std::fmt;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 #[cfg(feature = "embedded-graphics")]
