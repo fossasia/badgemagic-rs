@@ -4,6 +4,21 @@
 
 Library and CLI to configure LED badges.
 
+## Not working on linux ???
+Add a new udev rule:
+```
+/etc/udev/rules.d/71-badgemagic.rules
+-----------------------------------------------------------------------------------------------------
+SUBSYSTEMS=="hidraw", ATTRS{idVendor}=="0416", ATTRS{idProduct}=="5020", MODE="0660", TAG+="uaccess"
+```
+This will allow any logged in user to access the badge usb device
+Then do 
+```bash
+sudo udevadm control --reload
+sudo udevadm trigger
+```
+
+
 ## Installation
 
 As of now there are no proper releases (with version numbers) of this tool.

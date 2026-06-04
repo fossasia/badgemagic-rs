@@ -18,6 +18,7 @@ use u8g2_fonts::{U8g2TextStyle, fonts::{u8g2_font_lucasfont_alternate_tf, u8g2_f
 
 #[tauri::command]
 fn set_text(text: &str, speed: u8, animation: &str, effects: Vec<&str>, font: u8, font_subtype: &str) -> String {
+
     let speed: Speed = Speed::try_from(speed).unwrap_or(Speed::Fps2_8);
     let mode: Mode = Mode::try_from(animation).unwrap_or(Mode::Left);
 
