@@ -1,8 +1,5 @@
 //! Protocol used to update the badge
 
-use std::fmt;
-use std::error::Error;
-use std::fmt::{Display, Formatter};
 #[cfg(feature = "embedded-graphics")]
 use embedded_graphics::{
     draw_target::DrawTarget,
@@ -12,7 +9,12 @@ use embedded_graphics::{
     primitives::Rectangle,
     Drawable,
 };
-use std::num::TryFromIntError;
+use std::{
+    error::Error,
+    fmt,
+    fmt::{Display, Formatter},
+    num::TryFromIntError,
+};
 use time::OffsetDateTime;
 use zerocopy::{BigEndian, FromBytes, Immutable, IntoBytes, KnownLayout, U16};
 
