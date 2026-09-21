@@ -193,9 +193,13 @@ pub enum Mode {
 }
 
 /// Display Brightness
+///
+/// With the `serde` feature this is (de)serialized as a fraction of full
+/// brightness (`1.0`, `0.75`, `0.5`, `0.25`), which is also how it is written
+/// in a CLI config file.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(try_from = "f32", into = "u8"))]
+#[cfg_attr(feature = "serde", serde(try_from = "f32", into = "f32"))]
 pub enum Brightness {
     #[default]
     Full = 0x00,
