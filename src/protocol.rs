@@ -586,4 +586,44 @@ mod test {
             assert!(VALID_BRIGHTNESS_VALUES.contains(&(f32::from(brightness))));
         }
     }
+
+    // The conversions above are each correct on their own; these check them
+    // through serde, where serialization and deserialization must agree.
+    #[cfg(feature = "cli")]
+    #[test]
+    fn brightness_serde_round_trip() {
+        for brightness in [
+            Brightness::Full,
+            Brightness::ThreeQuarters,
+            Brightness::Half,
+            Brightness::OneQuarter,
+        ] {
+            let json = serde_json::to_string(&brightness).unwrap();
+            let back: Brightness = serde_json::from_str(&json).unwrap();
+            assert_eq!(back, brightness, "{brightness:?} serialized as {json}");
+        }
+    }
+
+    #[cfg(feature = "cli")]
+    #[test]
+    fn brightness_serializes_as_a_fraction() {
+        assert_eq!(serde_json::to_string(&Brightness::Full).unwrap(), "1.0");
+        assert_eq!(serde_json::to_string(&Brightness::Half).unwrap(), "0.5");
+    }
+
+    #[cfg(feature = "cli")]
+    #[test]
+    fn brightness_deserializes_from_a_fraction() {
+        // CLI config files give brightness as a fraction; keep reading them
+        // exactly as before.
+        for (json, expected) in [
+            ("1.0", Brightness::Full),
+            ("0.75", Brightness::ThreeQuarters),
+            ("0.5", Brightness::Half),
+            ("0.25", Brightness::OneQuarter),
+        ] {
+            let brightness: Brightness = serde_json::from_str(json).unwrap();
+            assert_eq!(brightness, expected, "{json}");
+        }
+    }
 }
