@@ -309,7 +309,10 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
 
 // Rejects bitmaps whose rows would be drawn below the display, which panics in the payload buffer.
 fn check_bitmap_size(data: &[u8], width: u32, max_height: u32) -> Result<()> {
-    let rows = data.len().checked_div(width.div_ceil(8) as usize).unwrap_or(0);
+    let rows = data
+        .len()
+        .checked_div(width.div_ceil(8) as usize)
+        .unwrap_or(0);
     anyhow::ensure!(
         rows <= max_height as usize,
         "bitmap is {rows} rows tall at width {width}, but the display is only {max_height} rows tall"
@@ -333,5 +336,25 @@ fn write_payload(
                     .write(payload)
                     .await
             }),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::check_bitmap_size;
+
+    #[test]
+    fn bitmap_fitting_the_display_is_accepted() {
+        assert!(check_bitmap_size(&[0; 11], 8, 11).is_ok());
+        assert!(check_bitmap_size(&[0; 22], 16, 11).is_ok());
+        // A partial trailing row is not drawn, so it does not count.
+        assert!(check_bitmap_size(&[0; 23], 16, 11).is_ok());
+        assert!(check_bitmap_size(&[0; 4], 0, 11).is_ok());
+    }
+
+    #[test]
+    fn bitmap_taller_than_the_display_is_rejected() {
+        assert!(check_bitmap_size(&[0; 12], 8, 11).is_err());
+        assert!(check_bitmap_size(&[0; 24], 9, 11).is_err());
     }
 }
