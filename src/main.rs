@@ -231,12 +231,14 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                 }
                 .decode(bitmap)
                 .context("decode bitmap")?;
+                check_bitmap_size(&data, width, DISPLAY_HEIGHT)?;
                 let image_raw = ImageRawLE::<BinaryColor>::new(&data, width);
                 let image = Image::new(&image_raw, Point::zero());
                 payload.add_message_drawable(style, &image);
             }
             Content::BitmapFile { width, bitmap_file } => {
                 let data = fs::read(bitmap_file).context("load bitmap")?;
+                check_bitmap_size(&data, width, DISPLAY_HEIGHT)?;
                 let image_raw = ImageRawLE::<BinaryColor>::new(&data, width);
                 let image = Image::new(&image_raw, Point::zero());
                 payload.add_message_drawable(style, &image);
@@ -299,6 +301,16 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
     }
 
     Ok(payload)
+}
+
+// Rejects bitmaps whose rows would be drawn below the display, which panics in the payload buffer.
+fn check_bitmap_size(data: &[u8], width: u32, max_height: u32) -> Result<()> {
+    let rows = data.len().checked_div(width.div_ceil(8) as usize).unwrap_or(0);
+    anyhow::ensure!(
+        rows <= max_height as usize,
+        "bitmap is {rows} rows tall at width {width}, but the display is only {max_height} rows tall"
+    );
+    Ok(())
 }
 
 fn write_payload(
