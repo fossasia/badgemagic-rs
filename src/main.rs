@@ -265,10 +265,14 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                 let frames = GifDecoder::new(file_in)?
                     .into_frames()
                     .collect_frames()
-                    .expect("error decoding gif");
+                    .context("decode gif")?;
 
                 let frame_count = frames.len();
-                let (width, height) = frames.first().unwrap().buffer().dimensions();
+                let (width, height) = frames
+                    .first()
+                    .context("gif file has no frames")?
+                    .buffer()
+                    .dimensions();
                 if height != DISPLAY_HEIGHT || width != DISPLAY_WIDTH {
                     anyhow::bail!("Expected {DISPLAY_WIDTH}x{DISPLAY_HEIGHT} pixel gif file");
                 }
