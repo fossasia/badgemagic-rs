@@ -231,12 +231,14 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                 }
                 .decode(bitmap)
                 .context("decode bitmap")?;
+                check_bitmap_size(&data, width, DISPLAY_HEIGHT)?;
                 let image_raw = ImageRawLE::<BinaryColor>::new(&data, width);
                 let image = Image::new(&image_raw, Point::zero());
                 payload.add_message_drawable(style, &image);
             }
             Content::BitmapFile { width, bitmap_file } => {
                 let data = fs::read(bitmap_file).context("load bitmap")?;
+                check_bitmap_size(&data, width, DISPLAY_HEIGHT)?;
                 let image_raw = ImageRawLE::<BinaryColor>::new(&data, width);
                 let image = Image::new(&image_raw, Point::zero());
                 payload.add_message_drawable(style, &image);
@@ -263,10 +265,14 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
                 let frames = GifDecoder::new(file_in)?
                     .into_frames()
                     .collect_frames()
-                    .expect("error decoding gif");
+                    .context("decode gif")?;
 
                 let frame_count = frames.len();
-                let (width, height) = frames.first().unwrap().buffer().dimensions();
+                let (width, height) = frames
+                    .first()
+                    .context("gif file has no frames")?
+                    .buffer()
+                    .dimensions();
                 if height != DISPLAY_HEIGHT || width != DISPLAY_WIDTH {
                     anyhow::bail!("Expected {DISPLAY_WIDTH}x{DISPLAY_HEIGHT} pixel gif file");
                 }
@@ -301,6 +307,19 @@ fn generate_payload(args: &mut Args) -> Result<PayloadBuffer> {
     Ok(payload)
 }
 
+// Rejects bitmaps whose rows would be drawn below the display, which panics in the payload buffer.
+fn check_bitmap_size(data: &[u8], width: u32, max_height: u32) -> Result<()> {
+    let rows = data
+        .len()
+        .checked_div(width.div_ceil(8) as usize)
+        .unwrap_or(0);
+    anyhow::ensure!(
+        rows <= max_height as usize,
+        "bitmap is {rows} rows tall at width {width}, but the display is only {max_height} rows tall"
+    );
+    Ok(())
+}
+
 fn write_payload(
     transport: &TransportProtocol,
     device_name: Option<&String>,
@@ -317,5 +336,25 @@ fn write_payload(
                     .write(payload)
                     .await
             }),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::check_bitmap_size;
+
+    #[test]
+    fn bitmap_fitting_the_display_is_accepted() {
+        assert!(check_bitmap_size(&[0; 11], 8, 11).is_ok());
+        assert!(check_bitmap_size(&[0; 22], 16, 11).is_ok());
+        // A partial trailing row is not drawn, so it does not count.
+        assert!(check_bitmap_size(&[0; 23], 16, 11).is_ok());
+        assert!(check_bitmap_size(&[0; 4], 0, 11).is_ok());
+    }
+
+    #[test]
+    fn bitmap_taller_than_the_display_is_rejected() {
+        assert!(check_bitmap_size(&[0; 12], 8, 11).is_err());
+        assert!(check_bitmap_size(&[0; 24], 9, 11).is_err());
     }
 }
